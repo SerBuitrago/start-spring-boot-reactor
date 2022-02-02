@@ -6,6 +6,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import co.com.reator.model.User;
 import reactor.core.publisher.Flux;
 
@@ -23,8 +26,14 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		Flux<String> names = Flux.just("Sergio Stives,Barrios Buitrago", "Claudia, Buitrago Hernandez",
-				"Jhonatan Javier,Barrios Buitrago", "Rafael Gustavo,Barrios", "Katherine,Buitrago Mendoza");
+		List<String> namesList = new ArrayList<>();
+		namesList.add("Sergio Stives,Barrios Buitrago");
+		namesList.add("Claudia, Buitrago Hernandez");
+		namesList.add("Jhonatan Javier,Barrios Buitrago");
+		namesList.add("Rafael Gustavo,Barrios");
+		namesList.add("Katherine,Buitrago Mendoza");
+
+		Flux<String> names = Flux.fromIterable(namesList);
 
 		Flux<User> users = names.map(name -> {
 			String[] nameAndSubname = name.split(",");
