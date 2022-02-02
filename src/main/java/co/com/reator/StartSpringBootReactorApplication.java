@@ -6,10 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import co.com.reator.model.Comment;
-import co.com.reator.model.User;
-import co.com.reator.model.UserComment;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @SpringBootApplication
 public class StartSpringBootReactorApplication implements CommandLineRunner {
@@ -22,55 +19,11 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		zipWithII();
+		Flux<Integer> rangeFlux = Flux.range(0, 4);
+		
+		Flux.just(1,2,3,4)
+		.map(value -> value * 2)
+		.zipWith(rangeFlux, (one, two) -> String.format("Primer Flux: %d, Segundo Flux: %d ", one, two))
+		.subscribe(logger::info);
 	}
-
-	void flatMap() {
-		Mono<User> userMono = Mono.fromCallable(() -> new User("Sergio Stives", "Barrios Buitrago"));
-		Mono<Comment> commentMono = Mono.fromCallable(() -> {
-			Comment comment = new Comment();
-			comment.add("Hola!");
-			comment.add("¿Como estas?");
-			comment.add("Chao");
-			comment.add("Buenos dias!");
-			return comment;
-		});
-
-		userMono.flatMap(user -> commentMono.map(comment -> new UserComment(user, comment)))
-				.subscribe(userComment -> logger.info(userComment.toString()));
-	}
-
-	void zipWith() {
-		Mono<User> userMono = Mono.fromCallable(() -> new User("Sergio Stives", "Barrios Buitrago"));
-		Mono<Comment> commentMono = Mono.fromCallable(() -> {
-			Comment comment = new Comment();
-			comment.add("Hola!");
-			comment.add("¿Como estas?");
-			comment.add("Chao");
-			comment.add("Buenos dias!");
-			return comment;
-		});
-
-		Mono<UserComment> userCommentMono = userMono.zipWith(commentMono,
-				(user, comment) -> new UserComment(user, comment));
-		userCommentMono.subscribe(userComment -> logger.info(userComment.toString()));
-	}
-	
-	void zipWithII() {
-		Mono<User> userMono = Mono.fromCallable(() -> new User("Sergio Stives", "Barrios Buitrago"));
-		Mono<Comment> commentMono = Mono.fromCallable(() -> {
-			Comment comment = new Comment();
-			comment.add("Hola!");
-			comment.add("¿Como estas?");
-			comment.add("Chao");
-			comment.add("Buenos dias!");
-			return comment;
-		});
-
-		Mono<UserComment> userCommentMono = userMono.zipWith(commentMono).map(tuple -> {
-			return new UserComment(tuple.getT1(), tuple.getT2());
-		});
-		userCommentMono.subscribe(userComment -> logger.info(userComment.toString()));
-	}
-
 }
