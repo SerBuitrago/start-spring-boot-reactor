@@ -12,19 +12,19 @@ import reactor.core.publisher.Flux;
 public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
-	
+
 	public static void main(String[] args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
-		Flux<String> names = Flux.just("Sergio", "Stives", "Jhonatan", "Javier")
-				.doOnNext(name -> {
-					if(name.isEmpty())
-						throw new RuntimeException("Nombre no puede estar vacio.");
-					System.out.println(name);
-				});
-		names.subscribe(logger::info);
+		Flux<String> names = Flux.just("Sergio", "Stives", "", "Jhonatan", "Javier").doOnNext(name -> {
+			if (name.isEmpty())
+				throw new RuntimeException("El nombre no puede estar vacio.");
+			System.out.println(name);
+		});
+		
+		names.subscribe(logger::info, error -> logger.error(error.getMessage()));
 	}
 }
