@@ -1,5 +1,7 @@
 package co.com.reator;
 
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -19,11 +21,15 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		Flux<Integer> rangeFlux = Flux.range(0, 4);
+		noBlock();
+	}
+	
+	void noBlock(){
+		Flux<Integer> rangeFlux = Flux.range(1, 12);
+		Flux<Long> intervalFlux = Flux.interval(Duration.ofSeconds(1));
 		
-		Flux.just(1,2,3,4)
-		.map(value -> value * 2)
-		.zipWith(rangeFlux, (one, two) -> String.format("Primer Flux: %d, Segundo Flux: %d ", one, two))
-		.subscribe(logger::info);
+		rangeFlux.zipWith(intervalFlux, (range, interval) -> range)
+		.doOnNext(range -> logger.info(range.toString()))
+		.subscribe();
 	}
 }
