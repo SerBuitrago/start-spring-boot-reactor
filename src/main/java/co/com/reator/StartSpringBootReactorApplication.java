@@ -27,22 +27,17 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		List<String> namesList = new ArrayList<>();
-		namesList.add("Sergio Stives,Barrios Buitrago");
-		namesList.add("Claudia, Buitrago Hernandez");
-		namesList.add("Jhonatan Javier,Barrios Buitrago");
-		namesList.add("Rafael Gustavo,Barrios");
-		namesList.add("Katherine,Buitrago Mendoza");
+		List<User> userList = new ArrayList<>();
+		userList.add(new User("Sergio Stives", "Barrios Buitrago"));
+		userList.add(new User("Claudia", "Buitrago Hernandez"));
+		userList.add(new User("Jhonatan Javier", "Barrios Buitrago"));
+		userList.add(new User("Rafael Gustavo", "Barrios"));
+		userList.add(new User("Katherine", "Buitrago Mendoza"));
 
-		Flux.fromIterable(namesList).map(name -> {
-			String[] nameAndSubname = name.split(",");
-			return new User(nameAndSubname[0].toUpperCase(), nameAndSubname[1].toUpperCase());
-		}).flatMap(user -> {
-			return (user.getSubname().equalsIgnoreCase(FILTER_SUBNAME)) ? Mono.just(user) : Mono.empty();
-		}).map(user -> {
-			user.setName(user.getName().toLowerCase());
-			user.setSubname(user.getSubname().toLowerCase());
-			return user;
-		}).subscribe(user -> logger.info(user.toString()));
+		Flux.fromIterable(userList).map(user -> {
+			return user.getName().toUpperCase().concat(" ").concat(user.getSubname().toUpperCase());
+		}).flatMap(name -> {
+			return (name.contains(FILTER_SUBNAME.toUpperCase())) ? Mono.just(name) : Mono.empty();
+		}).map(String::toLowerCase).subscribe(logger::info);
 	}
 }
