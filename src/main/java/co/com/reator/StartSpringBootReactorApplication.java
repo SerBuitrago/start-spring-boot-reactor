@@ -22,7 +22,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		zipWith();
+		zipWithII();
 	}
 
 	void flatMap() {
@@ -53,6 +53,23 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 		Mono<UserComment> userCommentMono = userMono.zipWith(commentMono,
 				(user, comment) -> new UserComment(user, comment));
+		userCommentMono.subscribe(userComment -> logger.info(userComment.toString()));
+	}
+	
+	void zipWithII() {
+		Mono<User> userMono = Mono.fromCallable(() -> new User("Sergio Stives", "Barrios Buitrago"));
+		Mono<Comment> commentMono = Mono.fromCallable(() -> {
+			Comment comment = new Comment();
+			comment.add("Hola!");
+			comment.add("¿Como estas?");
+			comment.add("Chao");
+			comment.add("Buenos dias!");
+			return comment;
+		});
+
+		Mono<UserComment> userCommentMono = userMono.zipWith(commentMono).map(tuple -> {
+			return new UserComment(tuple.getT1(), tuple.getT2());
+		});
 		userCommentMono.subscribe(userComment -> logger.info(userComment.toString()));
 	}
 
