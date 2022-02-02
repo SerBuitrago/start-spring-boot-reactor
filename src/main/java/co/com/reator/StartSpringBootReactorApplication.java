@@ -9,7 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.util.ArrayList;
 import java.util.List;
 
+import co.com.reator.model.Comment;
 import co.com.reator.model.User;
+import co.com.reator.model.UserComment;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -18,26 +20,28 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
 
-	private String filterSubname = "Barrios Buitrago";
-
-	public static void main(String[] args) {
+	public static void main(String... args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
-
-		List<User> userList = new ArrayList<>();
-		userList.add(new User("Sergio Stives", filterSubname));
-		userList.add(new User("Claudia", "Buitrago Hernandez"));
-		userList.add(new User("Jhonatan Javier", filterSubname));
-		userList.add(new User("Rafael Gustavo", "Barrios"));
-		userList.add(new User("Katherine", "Buitrago Mendoza"));
-
-		Flux.fromIterable(userList)
-		.collectList()
-		.subscribe(users -> {
-			users.forEach(user -> logger.info(user.toString()));
-		});
+		flatMap();
 	}
+	
+	void flatMap() {
+		Mono<User> userMono = Mono.fromCallable(() -> new User("Sergio Stives", "Barrios Buitrago"));
+		Mono<Comment> commentMono = Mono.fromCallable(() -> {
+			Comment comment = new Comment();
+			comment.add("Hola!");
+			comment.add("¿Como estas?");
+			comment.add("Chao");
+			comment.add("Buenos dias!");
+			return comment;
+		});
+
+		userMono.flatMap(user -> commentMono.map(comment -> new UserComment(user, comment)))
+				.subscribe(userComment -> logger.info(userComment.toString()));
+	}
+
 }
