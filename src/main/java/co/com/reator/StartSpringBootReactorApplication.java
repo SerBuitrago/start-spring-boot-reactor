@@ -1,5 +1,7 @@
 package co.com.reator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,6 +11,8 @@ import reactor.core.publisher.Flux;
 @SpringBootApplication
 public class StartSpringBootReactorApplication implements CommandLineRunner {
 
+	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
+	
 	public static void main(String[] args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
 	}
@@ -16,7 +20,11 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		Flux<String> names = Flux.just("Sergio", "Stives", "Jhonatan", "Javier")
-				.doOnNext(System.out::println);
-		names.subscribe();
+				.doOnNext(name -> {
+					if(name.isEmpty())
+						throw new RuntimeException("Nombre no puede estar vacio.");
+					System.out.println(name);
+				});
+		names.subscribe(logger::info);
 	}
 }
