@@ -1,6 +1,7 @@
 package co.com.reactor;
 
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,9 @@ import reactor.core.publisher.Flux;
 public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
+	
+	private Integer second = 1;
+	private Integer maxTimeout = 5;
 
 	public static void main(String... args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
@@ -21,31 +25,33 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		delay();
+		latchII();
 	}
 	
-	void noBlock(){
-		Flux<Integer> rangeFlux = Flux.range(1, 12);
-		Flux<Long> intervalFlux = Flux.interval(Duration.ofSeconds(1));
+	void latch() throws InterruptedException {
+		CountDownLatch latch = new CountDownLatch(second);
 		
-		rangeFlux.zipWith(intervalFlux, (range, interval) -> range)
-		.doOnNext(range -> logger.info(range.toString()))
+		Flux.interval(Duration.ofSeconds(second))
+		.doOnTerminate(latch::countDown)
+		.map(value -> "Hola "+value)
+		.doOnNext(logger::info)
 		.subscribe();
-	}
-	
-	void block(){
-		Flux<Integer> rangeFlux = Flux.range(1, 12);
-		Flux<Long> intervalFlux = Flux.interval(Duration.ofSeconds(1));
 		
-		rangeFlux.zipWith(intervalFlux, (range, interval) -> range)
-		.doOnNext(range -> logger.info(range.toString()))
-		.blockLast();
+		latch.await();
 	}
 	
-	void delay(){
-		Flux<Integer> rangeFlux = Flux.range(1, 12)
-				.delayElements(Duration.ofSeconds(1))
-				.doOnNext(range -> logger.info(range.toString()));
-		rangeFlux.blockLast();
+	void latchII() throws InterruptedException {
+		CountDownLatch latch = new CountDownLatch(second);
+		
+		Flux.interval(Duration.ofSeconds(second))
+		.doOnTerminate(latch::countDown)
+		.flatMap(value -> {
+			return (value >= maxTimeout) ? Flux.error(new InterruptedException("Solo hasta "+maxTimeout+"!")) : Flux.just(value);
+		})
+		.map(value -> "Hola "+value)
+		.doOnNext(logger::info)
+		.subscribe(System.out::println, error -> logger.error(error.getMessage()));
+		
+		latch.await();
 	}
 }
