@@ -18,7 +18,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
 
-	private final String FILTER_SUBNAME = "Barrios Buitrago";
+	private String filterSubname = "Barrios Buitrago";
 
 	public static void main(String[] args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
@@ -28,16 +28,16 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 
 		List<User> userList = new ArrayList<>();
-		userList.add(new User("Sergio Stives", "Barrios Buitrago"));
+		userList.add(new User("Sergio Stives", filterSubname));
 		userList.add(new User("Claudia", "Buitrago Hernandez"));
-		userList.add(new User("Jhonatan Javier", "Barrios Buitrago"));
+		userList.add(new User("Jhonatan Javier", filterSubname));
 		userList.add(new User("Rafael Gustavo", "Barrios"));
 		userList.add(new User("Katherine", "Buitrago Mendoza"));
 
-		Flux.fromIterable(userList).map(user -> {
-			return user.getName().toUpperCase().concat(" ").concat(user.getSubname().toUpperCase());
-		}).flatMap(name -> {
-			return (name.contains(FILTER_SUBNAME.toUpperCase())) ? Mono.just(name) : Mono.empty();
-		}).map(String::toLowerCase).subscribe(logger::info);
+		Flux.fromIterable(userList)
+		.collectList()
+		.subscribe(users -> {
+			users.forEach(user -> logger.info(user.toString()));
+		});
 	}
 }
