@@ -1,7 +1,8 @@
 package co.com.reactor;
 
-import java.time.Duration;
-import java.util.concurrent.CountDownLatch;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +17,9 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
 	
-	private Integer second = 1;
-	private Long retry = 2L;
-	private Integer maxTimeout = 5;
+	private Integer milisecond = 1000;
+	private Integer minCount = 0;
+	private Integer maxCount = 10;
 
 	public static void main(String... args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
@@ -26,49 +27,25 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		retry();
-	}
-	
-	void latch() throws InterruptedException {
-		CountDownLatch latch = new CountDownLatch(second);
-		
-		Flux.interval(Duration.ofSeconds(second))
-		.doOnTerminate(latch::countDown)
-		.map(value -> "Hola "+value)
-		.doOnNext(logger::info)
+		Flux.create(emitter -> {
+			Timer time = new Timer();
+			time.schedule(new TimerTask() {
+				
+				private Integer count = minCount;
+				
+				@Override
+				public void run() {
+					emitter.next(++count);
+					if(Objects.equals(count, maxCount)) {
+						time.cancel();
+						emitter.complete();
+					}
+					
+				}
+			}, milisecond, milisecond);
+		})
+		.doOnNext(count -> logger.info(count.toString()))
+		.doOnComplete(() -> logger.info("Hemos terminado!"))
 		.subscribe();
-		
-		latch.await();
-	}
-	
-	void exception() throws InterruptedException {
-		CountDownLatch latch = new CountDownLatch(second);
-		
-		Flux.interval(Duration.ofSeconds(second))
-		.doOnTerminate(latch::countDown)
-		.flatMap(value -> {
-			return (value >= maxTimeout) ? Flux.error(new InterruptedException("Solo hasta "+maxTimeout+"!")) : Flux.just(value);
-		})
-		.map(value -> "Hola "+value)
-		.doOnNext(logger::info)
-		.subscribe(System.out::println, error -> logger.error(error.getMessage()));
-		
-		latch.await();
-	}
-	
-	void retry() throws InterruptedException {
-		CountDownLatch latch = new CountDownLatch(second);
-		
-		Flux.interval(Duration.ofSeconds(second))
-		.doOnTerminate(latch::countDown)
-		.flatMap(value -> {
-			return (value >= maxTimeout) ? Flux.error(new InterruptedException("Solo hasta "+maxTimeout+"!")) : Flux.just(value);
-		})
-		.map(value -> "Hola "+value)
-		.retry(retry)
-		.doOnNext(logger::info)
-		.subscribe(System.out::println, error -> logger.error(error.getMessage()));
-		
-		latch.await();
 	}
 }
