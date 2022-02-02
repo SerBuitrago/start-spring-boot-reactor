@@ -21,7 +21,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		block();
+		delay();
 	}
 	
 	void noBlock(){
@@ -40,5 +40,14 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 		rangeFlux.zipWith(intervalFlux, (range, interval) -> range)
 		.doOnNext(range -> logger.info(range.toString()))
 		.blockLast();
+	}
+	
+	void delay(){
+		Flux<Integer> rangeFlux = Flux.range(1, 12)
+				.delayElements(Duration.ofSeconds(1))
+				.doOnNext(range -> logger.info(range.toString()));
+		
+		//rangeFlux.subscribe();
+		rangeFlux.blockLast();
 	}
 }
