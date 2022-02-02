@@ -1,4 +1,4 @@
-package co.com.reator;
+package co.com.reactor;
 
 import java.time.Duration;
 
@@ -46,8 +46,6 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 		Flux<Integer> rangeFlux = Flux.range(1, 12)
 				.delayElements(Duration.ofSeconds(1))
 				.doOnNext(range -> logger.info(range.toString()));
-		
-		//rangeFlux.subscribe();
 		rangeFlux.blockLast();
 	}
 }

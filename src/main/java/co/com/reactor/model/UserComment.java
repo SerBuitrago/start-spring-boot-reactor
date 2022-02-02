@@ -1,4 +1,4 @@
-package co.com.reator.model;
+package co.com.reactor.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
