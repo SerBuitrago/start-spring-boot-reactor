@@ -1,6 +1,7 @@
 package co.com.reactor;
 
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,31 +22,18 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		delay();
+		latch();
 	}
 	
-	void noBlock(){
-		Flux<Integer> rangeFlux = Flux.range(1, 12);
-		Flux<Long> intervalFlux = Flux.interval(Duration.ofSeconds(1));
+	void latch() throws InterruptedException {
+		CountDownLatch latch = new CountDownLatch(1);
 		
-		rangeFlux.zipWith(intervalFlux, (range, interval) -> range)
-		.doOnNext(range -> logger.info(range.toString()))
+		Flux.interval(Duration.ofSeconds(1))
+		.doOnTerminate(latch::countDown)
+		.map(value -> "Hola "+value)
+		.doOnNext(logger::info)
 		.subscribe();
-	}
-	
-	void block(){
-		Flux<Integer> rangeFlux = Flux.range(1, 12);
-		Flux<Long> intervalFlux = Flux.interval(Duration.ofSeconds(1));
 		
-		rangeFlux.zipWith(intervalFlux, (range, interval) -> range)
-		.doOnNext(range -> logger.info(range.toString()))
-		.blockLast();
-	}
-	
-	void delay(){
-		Flux<Integer> rangeFlux = Flux.range(1, 12)
-				.delayElements(Duration.ofSeconds(1))
-				.doOnNext(range -> logger.info(range.toString()));
-		rangeFlux.blockLast();
+		latch.await();
 	}
 }
