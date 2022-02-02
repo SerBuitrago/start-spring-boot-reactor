@@ -14,14 +14,21 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
 
+	private final String FILTER_SUBNAME = "Barrios Buitrago";
+
 	public static void main(String[] args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
-		Flux<User> names = Flux.just("Sergio", "Stives", "Claudia", "Jhonatan", "Javier")
-				.map(name -> new User(name.toUpperCase(), null)).doOnNext(user -> {
+		Flux<User> names = Flux
+				.just("Sergio Stives,Barrios Buitrago", "Claudia, Buitrago Hernandez",
+						"Jhonatan Javier,Barrios Buitrago", "Rafael Gustavo,Barrios", "Katherine,Buitrago Mendoza")
+				.map(name -> {
+					String[] nameAndSubname = name.split(",");
+					return new User(nameAndSubname[0].toUpperCase(), nameAndSubname[1].toUpperCase());
+				}).filter(user -> user.getSubname().equalsIgnoreCase(FILTER_SUBNAME)).doOnNext(user -> {
 					if (user == null)
 						throw new RuntimeException("El usuario no puede estar vacio.");
 					System.out.println(user);
@@ -31,12 +38,13 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 					return user;
 				});
 
-		names.subscribe(user -> logger.info(user.toString()), error -> logger.error(error.getMessage()), new Runnable() {
-			@Override
-			public void run() {
-				logger.info("Ha finalizado el observable con exito!");
+		names.subscribe(user -> logger.info(user.toString()), error -> logger.error(error.getMessage()),
+				new Runnable() {
+					@Override
+					public void run() {
+						logger.info("Ha finalizado el observable con exito!");
 
-			}
-		});
+					}
+				});
 	}
 }
