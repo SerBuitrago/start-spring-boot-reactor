@@ -17,6 +17,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
 	
 	private Integer second = 1;
+	private Long retry = 2L;
 	private Integer maxTimeout = 5;
 
 	public static void main(String... args) {
@@ -25,7 +26,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		latchII();
+		retry();
 	}
 	
 	void latch() throws InterruptedException {
@@ -40,7 +41,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 		latch.await();
 	}
 	
-	void latchII() throws InterruptedException {
+	void exception() throws InterruptedException {
 		CountDownLatch latch = new CountDownLatch(second);
 		
 		Flux.interval(Duration.ofSeconds(second))
@@ -49,6 +50,22 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 			return (value >= maxTimeout) ? Flux.error(new InterruptedException("Solo hasta "+maxTimeout+"!")) : Flux.just(value);
 		})
 		.map(value -> "Hola "+value)
+		.doOnNext(logger::info)
+		.subscribe(System.out::println, error -> logger.error(error.getMessage()));
+		
+		latch.await();
+	}
+	
+	void retry() throws InterruptedException {
+		CountDownLatch latch = new CountDownLatch(second);
+		
+		Flux.interval(Duration.ofSeconds(second))
+		.doOnTerminate(latch::countDown)
+		.flatMap(value -> {
+			return (value >= maxTimeout) ? Flux.error(new InterruptedException("Solo hasta "+maxTimeout+"!")) : Flux.just(value);
+		})
+		.map(value -> "Hola "+value)
+		.retry(retry)
 		.doOnNext(logger::info)
 		.subscribe(System.out::println, error -> logger.error(error.getMessage()));
 		
