@@ -19,32 +19,35 @@ public class ProductController {
 
 	@GetMapping("{id}")
 	public Mono<String> findById(@PathVariable("id") String id, Model model) {
-		model.addAttribute("product", productService.findById(id));
-		model.addAttribute("title", "Consultar por el id "+id+"!");
-		return Mono.just("find");
+		return productService.findById(id).doOnNext(product -> {
+			model.addAttribute("product", product);
+			model.addAttribute("title", "Consultar por el id " + id + "!");
+		}).then(Mono.just("find"));
 	}
 
-	@GetMapping({"/all", "", "/"})
+	@GetMapping({ "/all", "", "/" })
 	public Mono<String> findAll(Model model) {
 		model.addAttribute("products", productService.findAll());
 		model.addAttribute("title", "Listar Productos!");
 		return Mono.just("list");
 	}
-	
+
 	@GetMapping("/form")
-	public Mono<String> save(Model model){
-		model.addAttribute("product", new Product());
-		model.addAttribute("title", "Formulario Productos!");
-		model.addAttribute("type", "Registrar");
-		return Mono.just("form");
+	public Mono<String> save(Model model) {
+		return Mono.just(new Product()).doOnNext(product -> {
+			model.addAttribute("product", product);
+			model.addAttribute("title", "Formulario Productos!");
+			model.addAttribute("type", "Registrar");
+		}).then(Mono.just("form"));
 	}
-	
+
 	@GetMapping("/form/{id}")
-	public Mono<String> update(@PathVariable("id") String id, Model model){
-		model.addAttribute("product", productService.findById(id).defaultIfEmpty(new Product()));
-		model.addAttribute("title", "Formulario Productos!");
-		model.addAttribute("type", "Actualizar");
-		return Mono.just("form");
+	public Mono<String> update(@PathVariable("id") String id, Model model) {
+		return productService.findById(id).doOnNext(product -> {
+			model.addAttribute("product", product);
+			model.addAttribute("title", "Formulario Productos!");
+			model.addAttribute("type", "Actualizar");
+		}).defaultIfEmpty(new Product()).then(Mono.just("form"));
 	}
 
 	@PostMapping("/form")
