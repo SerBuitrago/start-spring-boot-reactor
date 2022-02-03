@@ -21,6 +21,7 @@ public class ProductServiceImpl implements IProductService {
 
 	private Long delayElements = 1L;
 	private Integer elements = 2;
+	private Integer maxElements = 5000;
 
 	private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
@@ -45,6 +46,28 @@ public class ProductServiceImpl implements IProductService {
 		productFlux.subscribe(product -> logger.info(product.getName()));
 		
 		return new ReactiveDataDriverContextVariable(productFlux, elements);
+	}
+
+	@Override
+	public Flux<Product> findAllWithFull() {
+		Flux<Product> productFlux = productRepository.findAll().map(product -> {
+			product.setName(product.getName().toUpperCase());
+			return product;
+		}).repeat(maxElements);
+		
+		productFlux.subscribe(product -> logger.info(product.getName()));
+		return productFlux;
+	}
+
+	@Override
+	public Flux<Product> findAllWithChunked() {
+		Flux<Product> productFlux = productRepository.findAll().map(product -> {
+			product.setName(product.getName().toUpperCase());
+			return product;
+		}).repeat(maxElements);
+		
+		productFlux.subscribe(product -> logger.info(product.getName()));
+		return productFlux;
 	}
 
 }

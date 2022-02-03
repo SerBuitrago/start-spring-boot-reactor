@@ -10,4 +10,8 @@ public interface IProductService {
 	Flux<Product> findAll();
 	
 	ReactiveDataDriverContextVariable findAllWithDelayElements();
+	
+	Flux<Product> findAllWithFull();
+	
+	Flux<Product> findAllWithChunked();
 }
