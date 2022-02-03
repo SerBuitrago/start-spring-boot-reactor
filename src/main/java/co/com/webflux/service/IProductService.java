@@ -9,4 +9,8 @@ public interface IProductService {
 	Mono<Product> findById(String id);
 
 	Flux<Product> findAll();
+	
+	Mono<Product> save(Product product);
+	
+	Mono<Void> delete(Product product);
 }

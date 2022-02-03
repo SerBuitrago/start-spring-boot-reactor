@@ -26,11 +26,19 @@ public class ProductServiceImpl implements IProductService {
 
 	@Override
 	public Flux<Product> findAll() {
-		Flux<Product> productFlux = productRepository.findAll().map(product -> {
+		return productRepository.findAll().map(product -> {
 			product.setName(product.getName().toUpperCase());
 			return product;
 		});
-		productFlux.subscribe(product -> logger.info(product.getName()));
-		return productFlux;
+	}
+
+	@Override
+	public Mono<Product> save(Product product) {
+		return productRepository.save(product);
+	}
+
+	@Override
+	public Mono<Void> delete(Product product) {
+		return productRepository.delete(product);
 	}
 }
