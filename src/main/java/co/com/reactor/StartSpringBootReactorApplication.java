@@ -1,9 +1,7 @@
 package co.com.reactor;
 
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
-
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -16,9 +14,8 @@ import reactor.core.publisher.Flux;
 public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StartSpringBootReactorApplication.class);
-	
-	private Integer milisecond = 1000;
-	private Integer minCount = 0;
+
+	private Integer minCount = 1;
 	private Integer maxCount = 10;
 
 	public static void main(String... args) {
@@ -27,25 +24,42 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		Flux.create(emitter -> {
-			Timer time = new Timer();
-			time.schedule(new TimerTask() {
-				
-				private Integer count = minCount;
-				
-				@Override
-				public void run() {
-					emitter.next(++count);
-					if(Objects.equals(count, maxCount)) {
-						time.cancel();
-						emitter.complete();
-					}
-					
+		subscriber();
+	}
+
+	void subscriber() {
+		Flux.range(minCount, maxCount)
+		.log()
+		.subscribe(new Subscriber<Integer>() {
+
+			private Subscription subscription;
+			private Integer init = 0;
+			private Integer limit = 5;
+			private Integer consumed = 0;
+
+			@Override
+			public void onSubscribe(Subscription subscription) {
+				this.subscription = subscription;
+				subscription.request(limit);
+			}
+
+			@Override
+			public void onNext(Integer range) {
+				logger.info(range.toString());
+				consumed++;
+				if (consumed == limit) {
+					consumed = init;
+					subscription.request(limit);
 				}
-			}, milisecond, milisecond);
-		})
-		.doOnNext(count -> logger.info(count.toString()))
-		.doOnComplete(() -> logger.info("Hemos terminado!"))
-		.subscribe();
+			}
+
+			@Override
+			public void onError(Throwable t) {
+			}
+
+			@Override
+			public void onComplete() {
+			}
+		});
 	}
 }
