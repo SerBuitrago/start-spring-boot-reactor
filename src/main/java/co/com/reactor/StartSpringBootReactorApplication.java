@@ -17,6 +17,9 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	private Integer minCount = 1;
 	private Integer maxCount = 10;
+	private Integer init = 0;
+	private Integer limit = 5;
+	private Integer consumed = 0;
 
 	public static void main(String... args) {
 		SpringApplication.run(StartSpringBootReactorApplication.class, args);
@@ -24,7 +27,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		subscriber();
+		limitRate();
 	}
 
 	void subscriber() {
@@ -33,10 +36,7 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 		.subscribe(new Subscriber<Integer>() {
 
 			private Subscription subscription;
-			private Integer init = 0;
-			private Integer limit = 5;
-			private Integer consumed = 0;
-
+			
 			@Override
 			public void onSubscribe(Subscription subscription) {
 				this.subscription = subscription;
@@ -54,12 +54,17 @@ public class StartSpringBootReactorApplication implements CommandLineRunner {
 			}
 
 			@Override
-			public void onError(Throwable t) {
-			}
+			public void onError(Throwable t) {}
 
 			@Override
-			public void onComplete() {
-			}
+			public void onComplete() {}
 		});
+	}
+	
+	void limitRate() {
+		Flux.range(minCount, maxCount)
+		.log()
+		.limitRate(limit)
+		.subscribe();
 	}
 }
