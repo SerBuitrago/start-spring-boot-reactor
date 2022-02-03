@@ -43,6 +43,7 @@
 					<th>Nombre</th>
 					<th>Precio</th>
 					<th>Fecha</th>
+					<th>Editar</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -51,6 +52,7 @@
 					<td th:text="${product.name}"></td>
 					<td th:text="${product.price}"></td>
 					<td th:text="${product.createAt}"></td>
+					<td> <a th:href="@{/form/} + ${product.id}">Editar</a></td>
 				</tr>
 			</tbody>
 		</table>

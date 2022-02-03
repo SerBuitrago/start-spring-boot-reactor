@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import co.com.webflux.service.IProductService;
@@ -17,9 +18,9 @@ public class ProductController {
 	private IProductService productService;
 
 	@GetMapping("{id}")
-	public Mono<String> findById(Model model) {
-		model.addAttribute("product", productService.findById("1"));
-		model.addAttribute("title", "Consultar por el id!");
+	public Mono<String> findById(@PathVariable("id") String id, Model model) {
+		model.addAttribute("product", productService.findById(id));
+		model.addAttribute("title", "Consultar por el id "+id+"!");
 		return Mono.just("find");
 	}
 
@@ -34,6 +35,15 @@ public class ProductController {
 	public Mono<String> save(Model model){
 		model.addAttribute("product", new Product());
 		model.addAttribute("title", "Formulario Productos!");
+		model.addAttribute("type", "Registrar");
+		return Mono.just("form");
+	}
+	
+	@GetMapping("/form/{id}")
+	public Mono<String> update(@PathVariable("id") String id, Model model){
+		model.addAttribute("product", productService.findById(id).defaultIfEmpty(new Product()));
+		model.addAttribute("title", "Formulario Productos!");
+		model.addAttribute("type", "Actualizar");
 		return Mono.just("form");
 	}
 
