@@ -6,3 +6,7 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/${spring.application.name}
+  thymeleaf:
+    reactive:
+      chunked-mode-view-names:
+      - list-chunked

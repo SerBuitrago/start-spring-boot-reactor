@@ -23,7 +23,21 @@ public class ProductController {
 	@GetMapping("/all/delay")
 	public String findAllWithDelayElements(Model model) {
 		model.addAttribute("products", productService.findAllWithDelayElements());
-		model.addAttribute("title", "Listado de Productos!");
+		model.addAttribute("title", "Listado de Productos Delay Elements!");
 		return "list";
+	}
+	
+	@GetMapping("/all/full")
+	public String findAllWithFull(Model model) {
+		model.addAttribute("products", productService.findAllWithFull());
+		model.addAttribute("title", "Listado de Productos Full!");
+		return "list";
+	}
+	
+	@GetMapping("/all/chunked")
+	public String findAllWithChunked(Model model) {
+		model.addAttribute("products", productService.findAllWithChunked());
+		model.addAttribute("title", "Listado de Productos Chunked!");
+		return "list-chunked";
 	}
 }
