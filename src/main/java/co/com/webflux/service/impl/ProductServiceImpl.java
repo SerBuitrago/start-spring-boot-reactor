@@ -34,7 +34,7 @@ public class ProductServiceImpl implements IProductService {
 
 	@Override
 	public Mono<Product> save(Product product) {
-		return productRepository.save(product);
+		return productRepository.save(product).doOnNext(productSave -> logger.info(productSave.toString()));
 	}
 
 	@Override
