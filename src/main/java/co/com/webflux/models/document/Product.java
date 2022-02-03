@@ -18,6 +18,11 @@ public class Product {
 	@Id
 	private String id;
 	
+	private String name;
 	private Double price;
 	private Date createAt;
+	
+	public Product(String name, Double price) {
+		this(null, name, price, null);
+	}
 }
