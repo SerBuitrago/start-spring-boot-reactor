@@ -21,10 +21,10 @@ public class ProductDto {
 	@NotEmpty(message = "El campo nombre no puede estar vacio.")
 	private String name;
 	
-	@NotNull(message = "El campo precio no puede ser nulo.")
+	@NotNull(message = "El campo precio no puede estar vacio.")
 	private Double price;
 	
+	@NotNull(message = "El campo fecha no puede estar vacio.")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date createAt;
-
 }
