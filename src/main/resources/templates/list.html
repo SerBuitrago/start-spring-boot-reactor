@@ -4,8 +4,13 @@
 <body>
 	<nav th:replace="layout/layout :: nav"></nav>
 	<div class="p-4">
+		<div th:if="${param.error != null}" th:text="${param.error}"
+			class="alert alert-danger" role="alert">
+		</div>
+		<div th:if="${param.success != null}" th:text="${param.success}"
+			class="alert alert-success" role="alert"></div>
 		<h1 th:text="${title}" class="title">Listado</h1>
-		<table class="table">
+		<table class="table table-striped">
 			<thead>
 				<tr>
 					<th>Id</th>
@@ -13,6 +18,7 @@
 					<th>Precio</th>
 					<th>Fecha</th>
 					<th>Editar</th>
+					<th>Eliminar</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -21,7 +27,8 @@
 					<td th:text="${product.name}"></td>
 					<td th:text="${product.price}"></td>
 					<td th:text="${product.createAt}"></td>
-					<td> <a th:href="@{/form/} + ${product.id}">Editar</a></td>
+					<td><a th:href="@{/form/} + ${product.id}" class="btn btn-outline-primary">Editar</a></td>
+					<td><a th:href="@{/delete/} + ${product.id}" class="btn btn-outline-danger" onclick="return confirm('¿Estas seguro que desea eliminar?')">Eliminar</a></td>
 				</tr>
 			</tbody>
 		</table>
