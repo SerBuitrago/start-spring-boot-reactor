@@ -9,6 +9,7 @@ import co.com.webflux.models.document.Product;
 import co.com.webflux.models.dto.ProductDto;
 import co.com.webflux.models.mapper.IProductMapper;
 import co.com.webflux.models.repository.IProductRepository;
+import co.com.webflux.models.service.ICategoryService;
 import co.com.webflux.models.service.IProductService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,6 +22,9 @@ public class ProductServiceImpl implements IProductService {
 
 	@Autowired
 	private IProductMapper productMapper;
+	
+	@Autowired
+	private ICategoryService categoryService;
 
 	private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 

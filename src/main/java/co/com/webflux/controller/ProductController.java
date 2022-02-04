@@ -28,12 +28,12 @@ public class ProductController {
 		return productService.findById(id).doOnNext(product -> {
 			model.addAttribute("product", product);
 			model.addAttribute("title", "Consultar por el id " + id + "!");
-		}).then(Mono.just("find"));
+		}).then(Mono.just("product/find"));
 	}
 
 	@GetMapping({ "/all", "", "/" })
 	public Mono<String> findAll(Model model) {
-		return Mono.just("list").doOnNext(name -> {
+		return Mono.just("product/list").doOnNext(name -> {
 			model.addAttribute("products", productService.findAll());
 			model.addAttribute("title", "Listar Productos!");
 		});
@@ -45,7 +45,7 @@ public class ProductController {
 			model.addAttribute("product", product);
 			model.addAttribute("title", "Formulario Productos!");
 			model.addAttribute("type", "Registrar");
-		}).then(Mono.just("form"));
+		}).then(Mono.just("product/form"));
 	}
 
 	@GetMapping("/form/{id}")
@@ -58,16 +58,18 @@ public class ProductController {
 				.flatMap(product -> (product.getId() == null)
 						? Mono.error(new InterruptedException("No extiste el producto."))
 						: Mono.just(product))
-				.then(Mono.just("form")).onErrorResume(ex -> Mono.just("redirect:/all?error=No+existe+el+producto"));
+				.then(Mono.just("product/form"))
+				.onErrorResume(ex -> Mono.just("redirect:/all?error=No+existe+el+producto"));
 	}
 
 	@GetMapping("/delete/{id}")
 	public Mono<String> delete(@PathVariable("id") String id) {
-		return productService.findById(id).defaultIfEmpty(new ProductDto())
-				.flatMap(product -> (product.getId() == null)
-						? Mono.error(new InterruptedException("No extiste el producto."))
-						: Mono.just(product))
-				.then(Mono.just("redirect:/all?success=Producto+eliminado+con+exito"))
+		return productService.findById(id).defaultIfEmpty(new ProductDto()).flatMap(product -> {
+			if (product.getId() == null)
+				return Mono.error(new InterruptedException("No extiste el producto."));
+			productService.delete(product);
+			return Mono.just(product);
+		}).then(Mono.just("redirect:/all?success=Producto+eliminado+con+exito"))
 				.onErrorResume(ex -> Mono.just("redirect:/all?error=No+existe+el+producto+a+eliminar"));
 	}
 
@@ -75,7 +77,7 @@ public class ProductController {
 	public Mono<String> save(@Valid ProductDto productDto, BindingResult result, Model model,
 			SessionStatus sessionStatus) {
 		if (result.hasErrors()) {
-			return Mono.just("form").doOnNext(name -> {
+			return Mono.just("product/form").doOnNext(name -> {
 				model.addAttribute("title", "Errores Formulario Productos!");
 				model.addAttribute("product", productDto);
 				model.addAttribute("type", "Registrar");

@@ -27,4 +27,7 @@ public class ProductDto {
 	@NotNull(message = "El campo fecha no puede estar vacio.")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date createAt;
+	
+	@NotNull(message = "El campo categoria no puede estar vacio.")
+	private CategoryDto category;
 }
