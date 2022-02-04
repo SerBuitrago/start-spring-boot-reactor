@@ -5,7 +5,7 @@
 	<nav th:replace="layout/layout :: nav"></nav>
 	<div class="p-4">
 		<h1 th:text="${title}" class="title">Listado</h1>
-		<form th:action="@{/form}" method="post" th:object="${product}">
+		<form th:action="@{/product/form}" method="post" th:object="${product}">
 			<div class="form-group" th:if="${product.id != null}">
 				<label for="id">Id</label> 
 				<input type="text" th:field="*{id}"
@@ -14,21 +14,29 @@
 					Identificador del producto.
 				</small>
 			</div>
-			<div class="form-group">
+			<div class="form-group mt-2">
 				<label for="name">Nombre</label> <input type="text"
 					th:field="*{name}" class="form-control"> <small
 					class="form-text text-muted">Es un campo unico.</small>
 				<small th:if="${#fields.hasErrors('name')}"  th:errors="*{name}" class="form-text text-muted"></small>
 			</div>
-			<div class="form-group">
+			<div class="form-group mt-2">
 				<label for="price">Precio</label> 
 				<input type="number" th:field="*{price}" class="form-control"> 
 				<small th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="form-text text-muted"></small>
 			</div>
-			<div class="form-group">
+			<div class="form-group mt-2">
 				<label for="createAt">Fecha</label> 
 				<input type="date" th:field="*{createAt}" class="form-control">
 				<small th:if="${#fields.hasErrors('createAt')}" th:errors="*{createAt}" class="form-text text-muted"></small>
+			</div>
+			<div class="form-group mt-2">
+				<label for="category.id">Categoria</label> 
+				<select th:field="*{category.id}" class="form-select">
+					<option value="">Seleccione Categoria</option>
+					<option th:each="category: ${categories}" th:value="${category.id}" th:text="${category.name}"></option>
+				</select>
+				<small th:if="${#fields.hasErrors('category.id')}" th:errors="*{category.id}" class="form-text text-muted"></small>
 			</div>
 			<div class="form-group pt-4">
 				<button type="submit" class="btn btn-primary" th:text="${type}"></button>
