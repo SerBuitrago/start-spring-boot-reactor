@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import co.com.webflux.service.IProductService;
-import co.com.webflux.models.document.Product;
+import co.com.webflux.models.dto.ProductDto;
+import co.com.webflux.models.service.IProductService;
 import reactor.core.publisher.Mono;
 
 @Controller
@@ -34,7 +34,7 @@ public class ProductController {
 
 	@GetMapping("/form")
 	public Mono<String> save(Model model) {
-		return Mono.just(new Product()).doOnNext(product -> {
+		return Mono.just(new ProductDto()).doOnNext(product -> {
 			model.addAttribute("product", product);
 			model.addAttribute("title", "Formulario Productos!");
 			model.addAttribute("type", "Registrar");
@@ -47,11 +47,11 @@ public class ProductController {
 			model.addAttribute("product", product);
 			model.addAttribute("title", "Formulario Productos!");
 			model.addAttribute("type", "Actualizar");
-		}).defaultIfEmpty(new Product()).then(Mono.just("form"));
+		}).defaultIfEmpty(new ProductDto()).then(Mono.just("form"));
 	}
 
 	@PostMapping("/form")
-	public Mono<String> save(Product product) {
-		return productService.save(product).thenReturn("redirect:/all");
+	public Mono<String> save(ProductDto productDto) {
+		return productService.save(productDto).thenReturn("redirect:/all");
 	}
 }

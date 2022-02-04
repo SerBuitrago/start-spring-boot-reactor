@@ -4,7 +4,6 @@ import java.util.Date;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,10 +21,5 @@ public class Product {
 	private String name;
 	private Double price;
 	
-	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date createAt;
-	
-	public Product(String name, Double price) {
-		this(null, name, price, null);
-	}
 }
