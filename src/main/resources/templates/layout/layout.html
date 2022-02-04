@@ -25,11 +25,20 @@
 				<li class="nav-item dropdown"><a
 					class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
 					role="button" data-toggle="dropdown" aria-haspopup="true"
-					aria-expanded="false"> Acciones </a>
+					aria-expanded="false"> Producto </a>
 					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-						<a class="dropdown-item" th:href="@{/form}">Registrar</a>
+						<a class="dropdown-item" th:href="@{/product/form}">Registrar</a>
 						<div class="dropdown-divider"></div>
-						<a class="dropdown-item" th:href="@{/all}">Listar</a>
+						<a class="dropdown-item" th:href="@{/product/all}">Listar</a>
+					</div></li>
+				<li class="nav-item dropdown"><a
+					class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+					role="button" data-toggle="dropdown" aria-haspopup="true"
+					aria-expanded="false"> Categoria </a>
+					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<a class="dropdown-item" th:href="@{/category/form}">Registrar</a>
+						<div class="dropdown-divider"></div>
+						<a class="dropdown-item" th:href="@{/category/all}">Listar</a>
 					</div></li>
 			</ul>
 		</div>
