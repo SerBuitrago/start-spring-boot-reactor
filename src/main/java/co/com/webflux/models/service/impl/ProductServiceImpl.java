@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 
-import co.com.webflux.models.document.Product;
-import co.com.webflux.models.dto.CategoryDto;
 import co.com.webflux.models.dto.ProductDto;
 import co.com.webflux.models.mapper.ICategoryMapper;
 import co.com.webflux.models.mapper.IProductMapper;
@@ -42,55 +40,69 @@ public class ProductServiceImpl implements IProductService {
 
 	@Override
 	public Mono<ProductDto> findById(String id) {
-		return productRepository.findById(id).doOnNext(product -> logger.info(product.getName()))
+		return productRepository.findById(id)
+				.doOnNext(product -> logger.info(product.getName()))
 				.map(product -> productMapper.toDto(product));
 	}
 
 	@Override
 	public Flux<ProductDto> findAll() {
-		return productRepository.findAll().map(product -> {
-			product.setName(product.getName().toUpperCase());
-			if (product.getCategory() != null && product.getCategory().getName() != null)
-				product.getCategory().setName(product.getCategory().getName().toUpperCase());
-			return productMapper.toDto(product);
-		});
+		return productRepository.findAll()
+				.doOnNext(product -> logger.info(product.getName()))
+				.map(product -> {
+					product.setName(product.getName().toUpperCase());
+					return productMapper.toDto(product);})
+				.map(product ->{
+					if (product.getCategory().getName() != null) {
+						String nameCategory = product.getCategory().getName().toUpperCase();
+						product.getCategory().setName(nameCategory);
+					}
+					return product;
+				});
 	}
 
-	@Override
-	public Flux<CategoryDto> findAllCategory() {
-		return categoryService.findAll();
-	}
-
-	@Override
 	public Mono<ProductDto> save(ProductDto productDto, FilePart file) {
-		return Mono.just(productMapper.toDocument(productDto)).map(product -> {
-			if (!file.filename().isEmpty()) {
-				product.setPhoto(UUID.randomUUID().toString().concat("-")
-						.concat(file.filename().replace(" ", "").replace(":", "").replace("\\", "")));
-			}
-			return product;
-		}).flatMap(product -> {
-			return categoryService.findById(product.getCategory().getId()).flatMap(category -> {
-				product.setCategory(categoryMapper.toDocument(category));
-				return Mono.just(product);
-			}).flatMap(productCategory -> {
-				return productRepository.save(productCategory)
-						.doOnNext(productSave -> logger.info(productSave.toString()))
-						.map(productSave -> productMapper.toDto(product));
-			}).flatMap(productSave -> {
-				if (productSave == null || file.filename().isEmpty())
-					return Mono.empty();
-				String path = uploadsPath.concat(productSave.getPhoto());
-				file.transferTo(new File(path));
-				return Mono.just(productSave);	
-			});
-		});
+		return Mono.just(productMapper.toDocument(productDto))
+				.map(product -> {
+					if (!file.filename().isEmpty()) {
+						product.setPhoto(
+								UUID.randomUUID().toString().concat("-")
+								.concat(file.filename()
+										.replace(" ", "")
+										.replace(":", "")
+										.replace("\\", "")));
+					}	
+					return product;
+				}).flatMap(product -> {
+					return categoryService.findById(product.getCategory().getId())
+							.flatMap(category -> {
+								product.setCategory(categoryMapper.toDocument(category));
+								return Mono.just(product);
+							}).flatMap(productCategory -> {
+								return productRepository.save(productCategory)
+										.doOnNext(productSave -> logger.info(productSave.toString()))
+										.map(productSave -> productMapper.toDto(product));
+							}).flatMap(productSave -> {
+								if (productSave == null || file.filename().isEmpty())
+									return Mono.empty();
+								String path = uploadsPath.concat(productSave.getPhoto());
+								file.transferTo(new File(path));
+								return Mono.just(productSave);	
+							});
+				});
 
 	}
 
 	@Override
-	public Mono<Void> delete(ProductDto productDto) {
-		Product product = productMapper.toDocument(productDto);
-		return productRepository.delete(product);
+	public Mono<Void> deleteById(String id) {
+		return findById(id)
+				.defaultIfEmpty(new ProductDto())
+				.flatMap(product ->{
+					if(product.getId() != null) {
+						productRepository.deleteById(product.getId());
+						return Mono.empty();
+					}
+					return Mono.error(new InterruptedException("No extiste el producto."));
+				});
 	}
 }

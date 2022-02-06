@@ -2,7 +2,6 @@ package co.com.webflux.models.service;
 
 import org.springframework.http.codec.multipart.FilePart;
 
-import co.com.webflux.models.dto.CategoryDto;
 import co.com.webflux.models.dto.ProductDto;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -13,9 +12,7 @@ public interface IProductService {
 
 	Flux<ProductDto> findAll();
 	
-	Flux<CategoryDto> findAllCategory();
-	
 	Mono<ProductDto> save(ProductDto productDto, FilePart file);
 	
-	Mono<Void> delete(ProductDto productDto);
+	Mono<Void> deleteById(String id);
 }

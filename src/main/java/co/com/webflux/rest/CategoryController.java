@@ -1,4 +1,4 @@
-package co.com.webflux.controller;
+package co.com.webflux.rest;
 
 import javax.validation.Valid;
 
