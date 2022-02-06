@@ -1,8 +1,18 @@
 package co.com.webflux.controller;
 
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 
@@ -26,9 +37,23 @@ public class ProductController {
 	@Autowired
 	private IProductService productService;
 	
+	@Value("${config.uploads.path}")
+	private String uploadsPath;
+
 	@ModelAttribute("categories")
-	public Flux<CategoryDto> findAllModel(){
+	public Flux<CategoryDto> findAllModel() {
 		return productService.findAllCategory();
+	}
+	
+	@GetMapping("/product/uploads/img/{photo:.+}") 
+	public Mono<ResponseEntity<Resource>> seePhoto(@PathVariable("photo") String photo) throws MalformedURLException{
+		Path path = Paths.get(uploadsPath).resolve(photo).toAbsolutePath();
+		Resource resource = new UrlResource(path.toUri());
+		return Mono.just(
+				ResponseEntity
+				.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+				.body(resource));
 	}
 
 	@GetMapping("/product/find/{id}")
@@ -36,7 +61,13 @@ public class ProductController {
 		return productService.findById(id).doOnNext(product -> {
 			model.addAttribute("product", product);
 			model.addAttribute("title", "Consultar por el id " + id + "!");
-		}).then(Mono.just("product/find"));
+		}).defaultIfEmpty(new ProductDto())
+
+				.flatMap(product -> (product.getId() == null)
+						? Mono.error(new InterruptedException("No extiste el producto."))
+						: Mono.just(product))
+				.then(Mono.just("product/find"))
+				.onErrorResume(ex -> Mono.just("redirect:/product/all?error=No+existe+el+producto"));
 	}
 
 	@GetMapping({ "/product/all", "/product", "/product/", "" })
@@ -83,7 +114,7 @@ public class ProductController {
 
 	@PostMapping("/product/form")
 	public Mono<String> save(@Valid ProductDto productDto, BindingResult result, Model model,
-			SessionStatus sessionStatus) {
+			@RequestPart("file") FilePart file, SessionStatus sessionStatus) {
 		if (result.hasErrors()) {
 			return Mono.just("product/form").doOnNext(name -> {
 				model.addAttribute("title", "Errores Formulario Productos!");
@@ -92,9 +123,13 @@ public class ProductController {
 			});
 		} else {
 			sessionStatus.setComplete();
-			String path = "redirect:/product/all?success=Producto+"
-					+ (productDto.getId() == null ? "registrado" : "actualizado");
-			return productService.save(productDto).thenReturn(path);
+			String typeRequest = (productDto.getId() == null ? "registrado" : "actualizado");
+			return productService.save(productDto, file).flatMap(product -> {
+				if (product == null || product.getId() == null)
+					return Mono.error(new InterruptedException("No se ha registrado el producto."));
+				return Mono.just(product);
+			}).then(Mono.just("redirect:/product/all?success=Producto+" + typeRequest))
+					.onErrorResume(ex -> Mono.just("redirect:/product/all?error=No+se+ha" + typeRequest + "+producto"));
 		}
 	}
 }

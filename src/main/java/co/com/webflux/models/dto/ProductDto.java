@@ -30,4 +30,6 @@ public class ProductDto {
 	
 	@NotNull(message = "El campo categoria no puede estar vacio.")
 	private CategoryDto category;
+	
+	private String photo;
 }
