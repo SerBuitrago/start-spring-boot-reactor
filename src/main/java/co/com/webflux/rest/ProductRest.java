@@ -1,5 +1,8 @@
 package co.com.webflux.rest;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.support.WebExchangeBindException;
 
 import co.com.webflux.models.dto.ProductDto;
 import co.com.webflux.models.service.IProductService;
@@ -52,16 +56,31 @@ public class ProductRest {
 	}
 	
 	@PostMapping
-	public Mono<ResponseEntity<ProductDto>> save(@Valid @ModelAttribute ProductDto product, @RequestPart("file") FilePart file){
-		return productService.save(product, file)
-				.map(productSave ->
-					ResponseEntity
-						.status(HttpStatus.CREATED)
-						.body(productSave))
-				.defaultIfEmpty(
-					ResponseEntity
-						.status(HttpStatus.NOT_FOUND)
-						.build());
+	public Mono<ResponseEntity<Map<String, Object>>> save(@Valid @ModelAttribute Mono<ProductDto> monoProduct, @RequestPart("file") FilePart file){
+		Map<String, Object> response = new HashMap<>();
+		return monoProduct.flatMap(product ->
+			 productService.save(product, file)
+					.map(productSave -> {
+						response.put("product", productSave);
+						return ResponseEntity
+							.status(HttpStatus.CREATED)
+							.body(response);
+					}).defaultIfEmpty(
+						ResponseEntity
+							.status(HttpStatus.NOT_FOUND)
+							.build())
+		).onErrorResume(error ->{
+			return Mono.just(error)
+					.cast(WebExchangeBindException.class)
+					.flatMap(e-> Mono.just(e.getFieldErrors()))
+					.flatMapMany(Flux::fromIterable)
+					.map(field -> "El campo "+field+" "+field.getDefaultMessage())
+					.collectList()
+					.flatMap(list ->{
+						response.put("errors", list);
+						return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+					});
+		});	
 	}
 	
 	@PutMapping
