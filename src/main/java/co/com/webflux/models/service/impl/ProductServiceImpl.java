@@ -53,7 +53,7 @@ public class ProductServiceImpl implements IProductService {
 					product.setName(product.getName().toUpperCase());
 					return productMapper.toDto(product);})
 				.map(product ->{
-					if (product.getCategory().getName() != null) {
+					if (product.getCategory() != null && product.getCategory().getName() != null) {
 						String nameCategory = product.getCategory().getName().toUpperCase();
 						product.getCategory().setName(nameCategory);
 					}
@@ -98,11 +98,15 @@ public class ProductServiceImpl implements IProductService {
 		return findById(id)
 				.defaultIfEmpty(new ProductDto())
 				.flatMap(product ->{
-					if(product.getId() != null) {
-						productRepository.deleteById(product.getId());
-						return Mono.empty();
-					}
-					return Mono.error(new InterruptedException("No extiste el producto."));
+					logger.info("Validar");
+					if(product.getId() != null)
+						productRepository.deleteById(product.getId())
+							.subscribe(message ->
+								logger.info("Se elimino el producto con id ".concat(product.getId()))
+							);
+					else 
+						logger.error("No se ha eliminado");
+					return Mono.empty();
 				});
 	}
 }
