@@ -1,11 +1,15 @@
 package co.com.webflux.models.service.impl;
 
+import java.io.File;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 
-import co.com.webflux.models.document.Category;
 import co.com.webflux.models.document.Product;
 import co.com.webflux.models.dto.CategoryDto;
 import co.com.webflux.models.dto.ProductDto;
@@ -19,6 +23,9 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class ProductServiceImpl implements IProductService {
+
+	@Value("${config.uploads.path}")
+	private String uploadsPath;
 
 	@Autowired
 	private IProductRepository productRepository;
@@ -55,14 +62,27 @@ public class ProductServiceImpl implements IProductService {
 	}
 
 	@Override
-	public Mono<ProductDto> save(ProductDto productDto) {
-		return Mono.just(productMapper.toDocument(productDto)).flatMap(product -> {
+	public Mono<ProductDto> save(ProductDto productDto, FilePart file) {
+		return Mono.just(productMapper.toDocument(productDto)).map(product -> {
+			if (!file.filename().isEmpty()) {
+				product.setPhoto(UUID.randomUUID().toString().concat("-")
+						.concat(file.filename().replace(" ", "").replace(":", "").replace("\\", "")));
+			}
+			return product;
+		}).flatMap(product -> {
 			return categoryService.findById(product.getCategory().getId()).flatMap(category -> {
 				product.setCategory(categoryMapper.toDocument(category));
 				return Mono.just(product);
 			}).flatMap(productCategory -> {
-				return productRepository.save(productCategory).doOnNext(productSave -> logger.info(productSave.toString()))
+				return productRepository.save(productCategory)
+						.doOnNext(productSave -> logger.info(productSave.toString()))
 						.map(productSave -> productMapper.toDto(product));
+			}).flatMap(productSave -> {
+				if (productSave == null || file.filename().isEmpty())
+					return Mono.empty();
+				String path = uploadsPath.concat(productSave.getPhoto());
+				file.transferTo(new File(path));
+				return Mono.just(productSave);	
 			});
 		});
 

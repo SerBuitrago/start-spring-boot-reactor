@@ -24,4 +24,6 @@ public class Product {
 	private Date createAt;
 	
 	private Category category;
+	
+	private String photo;
 }

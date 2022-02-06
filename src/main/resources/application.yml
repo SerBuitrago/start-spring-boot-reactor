@@ -6,3 +6,6 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/${spring.application.name}
+config:
+  uploads:
+    path: C://Users//sergio.barrios//Documents//Proyectos//Image//Web//Reactive//
