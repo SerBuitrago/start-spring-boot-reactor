@@ -5,12 +5,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.FormFieldPart;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import co.com.webflux.models.dto.CategoryDto;
 import co.com.webflux.models.dto.ProductDto;
 import co.com.webflux.models.service.IProductService;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
@@ -23,6 +27,9 @@ public class ProductHandler {
 	
 	@Autowired
 	private IProductService productService;
+	
+	@Autowired
+	private Validator validator;
 	
 	@SuppressWarnings("deprecation")
 	public Mono<ServerResponse> findById(ServerRequest request){
@@ -71,14 +78,29 @@ public class ProductHandler {
 							null
 					);
 				});
-		return productMono.flatMap(product -> 
-			productService.save(product, filePart.block())
-		).flatMap(product -> 
-			ServerResponse
-				.created(URI.create("/api/product/".concat(product.getId())))
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.body(fromObject(product))
-		);
+		
+		return productMono.flatMap(product -> {
+			Errors errors = new BeanPropertyBindingResult(product, ProductDto.class.getName());
+			validator.validate(product, errors);
+			
+			if(errors.hasErrors()) {
+				return Flux.fromIterable(errors.getFieldErrors())
+						.map(fieldError ->  "El campo ".concat(fieldError.getField()).concat(" ").concat(fieldError.getDefaultMessage()))
+						.collectList()
+						.flatMap(list -> ServerResponse
+											.badRequest()
+											.body(fromObject(list)));
+			}else {
+				return productService
+						.save(product, filePart.block())
+							.flatMap(productSave -> 
+								ServerResponse
+									.created(URI.create("/api/product/".concat(productSave.getId())))
+									.contentType(MediaType.APPLICATION_JSON_UTF8)
+									.body(fromObject(productSave))
+							);
+			}	
+		});
 	}
 	
 	@SuppressWarnings("deprecation")
